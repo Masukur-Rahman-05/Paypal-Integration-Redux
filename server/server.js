@@ -1,6 +1,7 @@
-import cookieParser from 'cookie-parser'
 import express from 'express'
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import PaymentRoutes from './routes/PaymentRoutes.js'
 
 const app = express()
 
@@ -16,7 +17,9 @@ app.use(
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(cookieParser)
+app.use(cookieParser())
+
+app.use('/api', PaymentRoutes)
 
 
 
