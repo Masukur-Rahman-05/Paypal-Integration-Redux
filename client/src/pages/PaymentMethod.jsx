@@ -3,9 +3,9 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 
 const PaymentMethod = () => {
-
   const [paymentError, setPaymentError] = useState("");
   const [paymentSuccess, setPaymentSuccess] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("");
   const initialOptions = {
     clientId:
       "AdaW3e-KJ-fEsPHCOu5KXkFhZey6BkbxPKD19G-tXuig3kGNDGYLWNOv53E-r-6VNwgJixRJg7cQCLHP",
@@ -76,48 +76,71 @@ const PaymentMethod = () => {
       if (captureStatus === "COMPLETED") {
         setPaymentSuccess(`Payment completed! Order ID: ${data.orderID}`);
         // Here you can redirect to success page or update your database
+        fetchPaymentStatus(data.orderID); // Fetch payment status after successful capture
       }
     } catch (error) {
       setPaymentError(`Payment failed: ${error.message}`);
     }
   };
 
-    return (
-      <div className=" relative w-screen h-screen flex flex-col justify-center items-center gap-5 bg-violet-100">
-        <div className="absolute w-[350px] h-[350px] bg-pink-200 rounded-full blur-[80px] top-0 -left-40 z-20"></div>
+  // New function to fetch payment status
+  const fetchPaymentStatus = async (orderId) => {
+    try {
+      const response = await fetch(`/api/payment/${orderId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-        {/* Error Message */}
-        {paymentError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {paymentError}
-          </div>
-        )}
+      const paymentData = await response.json();
 
-        {/* Success Message */}
-        {paymentSuccess && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-            {paymentSuccess}
-          </div>
-        )}
+      if (paymentData.error) {
+        throw new Error(paymentData.error);
+      }
 
-        <div>
-          <PayPalScriptProvider options={initialOptions}>
-            <PayPalButtons
-              style={{
-                layout: "vertical", // Vertical layout removes unnecessary buttons
-                fundingicons: true, // Removes funding icons
-              }}
-              fundingSource="paypal" // Ensures only the PayPal button appears
-              createOrder={createOrder}
-              onApprove={onApprove}
-              onError={(err) => {
-                setPaymentError(`PayPal encountered an error: ${err.message}`);
-              }}
-            />
-          </PayPalScriptProvider>
+      setPaymentStatus(`Payment Status: ${paymentData.paymentStatus}`);
+    } catch (error) {
+      setPaymentError(`Failed to fetch payment status: ${error.message}`);
+    }
+  };
+
+  return (
+    <div className=" relative w-screen h-screen flex flex-col justify-center items-center gap-5 bg-violet-100">
+      <div className="absolute w-[350px] h-[350px] bg-pink-200 rounded-full blur-[80px] top-0 -left-40 z-20"></div>
+
+      {/* Error Message */}
+      {paymentError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {paymentError}
         </div>
+      )}
+
+      {/* Success Message */}
+      {paymentSuccess && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          {paymentSuccess}
+        </div>
+      )}
+
+      <div>
+        <PayPalScriptProvider options={initialOptions}>
+          <PayPalButtons
+            style={{
+              layout: "vertical", // Vertical layout removes unnecessary buttons
+              fundingicons: true, // Removes funding icons
+            }}
+            fundingSource="paypal" // Ensures only the PayPal button appears
+            createOrder={createOrder}
+            onApprove={onApprove}
+            onError={(err) => {
+              setPaymentError(`PayPal encountered an error: ${err.message}`);
+            }}
+          />
+        </PayPalScriptProvider>
       </div>
-    );
+    </div>
+  );
 };
 
 export default PaymentMethod;
