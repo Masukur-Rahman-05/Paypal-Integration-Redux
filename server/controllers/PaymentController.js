@@ -5,6 +5,7 @@ import {
 } from "@paypal/paypal-server-sdk";
 import { Payment } from "../models/Payment.js";
 import { client } from "../config/paypal.js";
+import { response } from "express";
 
 const ordersController = new OrdersController(client);
 
@@ -32,7 +33,9 @@ export const createOrder = async (req, res) => {
 
     // Call PayPal to create the order
     const { body, statusCode } = await ordersController.ordersCreate(collect);
+    
     const responseBody = typeof body === "string" ? JSON.parse(body) : body;
+    // console.log("Response Body:", responseBody);
 
     // Ensure response contains orderId
     if (responseBody.id) {
@@ -84,6 +87,7 @@ export const captureOrder = async (req, res) => {
         message: "Payment successfully captured",
         orderID,
         paymentStatus: responseBody.status,
+        responseBody,
       });
     } else {
       // If capture is not successful, send an error response

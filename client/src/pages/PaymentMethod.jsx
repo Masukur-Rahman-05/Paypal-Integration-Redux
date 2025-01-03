@@ -72,14 +72,17 @@ const PaymentMethod = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      
+
       const paymentData = await response.json();
+      
       if (paymentData.error) {
         throw new Error(paymentData.error);
       }
 
       setPaymentStatus(`Payment Status: ${paymentData.paymentStatus}`);
     } catch (error) {
-      console.error("Payment status error:", error);
+      // console.error("Payment status error:", error);
       // Don't show the error to the user since payment was successful
       setPaymentStatus("Payment completed successfully");
     }
