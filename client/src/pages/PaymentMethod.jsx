@@ -22,7 +22,7 @@ const PaymentMethod = () => {
   };
 
   const link =
-    "https://d902-2404-1c40-166-c5ee-4d87-f582-39a0-5914.ngrok-free.app";
+    "https://7905-2404-1c40-161-dac5-74c6-38de-19e3-49e6.ngrok-free.app";
 
   const createOrder = async () => {
     try {
