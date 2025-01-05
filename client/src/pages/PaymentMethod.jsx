@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { orderCreate } from "../Redux/PaymentSlice.js";
+import { orderCapture, orderCreate } from "../Redux/PaymentSlice.js";
 
 const PaymentMethod = () => {
   const [paymentError, setPaymentError] = useState("");
@@ -34,7 +34,7 @@ const PaymentMethod = () => {
   ];
 
   const link =
-    "https://2e75-2404-1c40-171-cf7b-2926-ea46-252b-1a6b.ngrok-free.app";
+    "https://076b-2404-1c40-162-3787-d04d-7d1e-845e-d6c1.ngrok-free.app";
 
   const createOrder = async () => {
     try {
@@ -49,57 +49,61 @@ const PaymentMethod = () => {
     }
   };
 
-  const fetchPaymentStatus = async (orderId) => {
-    try {
-      const response = await fetch(`${link}/api/payment/${orderId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+   const fetchPaymentStatus = async (orderId) => {
+     try {
+       const response = await fetch(`${link}/api/payment/${orderId}`, {
+         method: "GET",
+         headers: {
+           "Content-Type": "application/json",
+         },
+       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+       if (!response.ok) {
+         throw new Error(`HTTP error! status: ${response.status}`);
+       }
 
-      const paymentData = await response.json();
+       const paymentData = await response.json();
 
-      if (paymentData.error) {
-        throw new Error(paymentData.error);
-      }
+       if (paymentData.error) {
+         throw new Error(paymentData.error);
+       }
 
-      setPaymentStatus(`Payment Status: ${paymentData.paymentStatus}`);
-    } catch (error) {
-      // console.error("Payment status error:", error);
-      // Don't show the error to the user since payment was successful
-      setPaymentStatus("Payment completed successfully");
-    }
-  };
+       setPaymentStatus(`Payment Status: ${paymentData.paymentStatus}`);
+     } catch (error) {
+       // console.error("Payment status error:", error);
+       // Don't show the error to the user since payment was successful
+       setPaymentStatus("Payment completed successfully");
+     }
+   };
 
   const onApprove = async (data, actions) => {
     try {
-      const response = await fetch(
-        `${link}/api/orders/capture/${data.orderID}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const response = await dispatch(orderCapture({ orderId: data.orderID }))
+      
+      console.log(response.payload)
+      // const response = await fetch(
+      //   `${link}/api/orders/capture/${data.orderID}`,
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // );
 
-      const orderData = await response.json();
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
 
-      if (orderData.error) {
-        setPaymentError(`Payment failed: ${orderData.error}`);
-        return;
-      }
+      // const orderData = await response.json();
 
-      if (orderData.paymentStatus === "COMPLETED") {
+      // if (orderData.error) {
+      //   setPaymentError(`Payment failed: ${orderData.error}`);
+      //   return;
+      // }
+
+      if (response.payload.paymentStatus === "COMPLETED") {
         setPaymentSuccess(`Payment completed! Order ID: ${data.orderID}`);
         // Add a slight delay before fetching payment status
         setTimeout(() => fetchPaymentStatus(data.orderID), 1000);
@@ -111,6 +115,10 @@ const PaymentMethod = () => {
       setPaymentError(`Payment failed: ${error.message}`);
     }
   };
+
+
+
+   
 
   return (
     <div className="relative w-screen h-screen flex flex-col justify-center items-center gap-5 bg-violet-100">
