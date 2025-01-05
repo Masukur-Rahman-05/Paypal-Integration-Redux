@@ -5,7 +5,7 @@ import {
 } from "@paypal/paypal-server-sdk";
 import { Payment } from "../models/Payment.js";
 import { client } from "../config/paypal.js";
-import { response } from "express";
+
 
 const ordersController = new OrdersController(client);
 
@@ -13,6 +13,7 @@ const ordersController = new OrdersController(client);
 export const createOrder = async (req, res) => {
   try {
     const { cart } = req.body;
+    console.log(cart)
     const item = cart[0]; // Assuming the cart always has at least one item
 
     const collect = {

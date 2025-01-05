@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { orderCreate } from "../Redux/PaymentSlice.js";
 
 const PaymentMethod = () => {
   const [paymentError, setPaymentError] = useState("");
   const [paymentSuccess, setPaymentSuccess] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const initialOptions = {
     clientId:
@@ -21,38 +24,25 @@ const PaymentMethod = () => {
     price: "1000.00",
   };
 
+  const cart = [
+    {
+      id: productData.id,
+      name: productData.name,
+      quantity: 1,
+      amount: productData.price,
+    },
+  ];
+
   const link =
-    "https://7905-2404-1c40-161-dac5-74c6-38de-19e3-49e6.ngrok-free.app";
+    "https://2e75-2404-1c40-171-cf7b-2926-ea46-252b-1a6b.ngrok-free.app";
 
   const createOrder = async () => {
     try {
-      const response = await fetch(`${link}/api/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          cart: [
-            {
-              id: productData.id,
-              name: productData.name,
-              quantity: 1,
-              amount: productData.price,
-            },
-          ],
-        }),
-      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const orderData = await response.json();
-      if (orderData.id) {
-        return orderData.id;
-      } else {
-        throw new Error("Failed to create order");
-      }
+      const response = await dispatch(orderCreate({ cart }))
+      
+      console.log(response.payload);
+      return response.payload.id
     } catch (error) {
       setPaymentError(`Failed to create order: ${error.message}`);
       throw error;
@@ -72,10 +62,8 @@ const PaymentMethod = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      
-
       const paymentData = await response.json();
-      
+
       if (paymentData.error) {
         throw new Error(paymentData.error);
       }
@@ -115,7 +103,7 @@ const PaymentMethod = () => {
         setPaymentSuccess(`Payment completed! Order ID: ${data.orderID}`);
         // Add a slight delay before fetching payment status
         setTimeout(() => fetchPaymentStatus(data.orderID), 1000);
-        navigate("/payment-success")
+        navigate("/payment-success");
       } else {
         setPaymentError(`Payment capture failed!`);
       }
@@ -167,4 +155,3 @@ const PaymentMethod = () => {
 };
 
 export default PaymentMethod;
-
