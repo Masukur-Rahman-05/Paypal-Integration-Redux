@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const BASE_URL =
-  "https://076b-2404-1c40-162-3787-d04d-7d1e-845e-d6c1.ngrok-free.app";
+  "https://41a9-2404-1c40-162-3787-d04d-7d1e-845e-d6c1.ngrok-free.app";
 
 const initialState = {
   paymentError: "",
@@ -59,6 +59,32 @@ export const orderCapture = createAsyncThunk(
   }
 );
 
+export const getPaymentInfo = createAsyncThunk(
+  "paymentSlice/getPaymentInfo",
+  async ({ orderId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/payment/${orderId}`,
+        // // {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      console.log('Payment Info',response);
+      return response.data;
+    } catch (error) {
+      console.log("Failed to get payment Info from frontend", error.message);
+
+      rejectWithValue(error.message);
+    }
+  }
+);
+
 const paymentSlice = createSlice({
   name: "paymentSlice",
   initialState,
@@ -81,6 +107,15 @@ const paymentSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(orderCapture.rejected, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(getPaymentInfo.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getPaymentInfo.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(getPaymentInfo.rejected, (state, action) => {
         state.isLoading = false;
       });
   },

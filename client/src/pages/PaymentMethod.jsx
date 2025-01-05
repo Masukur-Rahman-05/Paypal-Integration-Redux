@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { orderCapture, orderCreate } from "../Redux/PaymentSlice.js";
+import {
+  orderCapture,
+  orderCreate,
+  getPaymentInfo,
+} from "../Redux/PaymentSlice.js";
 
 const PaymentMethod = () => {
   const [paymentError, setPaymentError] = useState("");
@@ -49,64 +53,34 @@ const PaymentMethod = () => {
     }
   };
 
-   const fetchPaymentStatus = async (orderId) => {
+   const fetchPaymentStatus = async (getOrderId) => {
      try {
-       const response = await fetch(`${link}/api/payment/${orderId}`, {
-         method: "GET",
-         headers: {
-           "Content-Type": "application/json",
-         },
-       });
+       
+       const response = await dispatch(getPaymentInfo({ orderId:getOrderId }))
 
-       if (!response.ok) {
-         throw new Error(`HTTP error! status: ${response.status}`);
+       if (response.error) {
+         throw new Error(response.error);
        }
 
-       const paymentData = await response.json();
+       console.log(response.payload);
+       return response.payload
 
-       if (paymentData.error) {
-         throw new Error(paymentData.error);
-       }
-
-       setPaymentStatus(`Payment Status: ${paymentData.paymentStatus}`);
      } catch (error) {
-       // console.error("Payment status error:", error);
-       // Don't show the error to the user since payment was successful
        setPaymentStatus("Payment completed successfully");
      }
    };
 
   const onApprove = async (data, actions) => {
+    console.log(data.orderID)
     try {
 
       const response = await dispatch(orderCapture({ orderId: data.orderID }))
       
-      console.log(response.payload)
-      // const response = await fetch(
-      //   `${link}/api/orders/capture/${data.orderID}`,
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
-
-      // if (!response.ok) {
-      //   throw new Error(`HTTP error! status: ${response.status}`);
-      // }
-
-      // const orderData = await response.json();
-
-      // if (orderData.error) {
-      //   setPaymentError(`Payment failed: ${orderData.error}`);
-      //   return;
-      // }
+      console.log(response.payload);
 
       if (response.payload.paymentStatus === "COMPLETED") {
         setPaymentSuccess(`Payment completed! Order ID: ${data.orderID}`);
-        // Add a slight delay before fetching payment status
-        setTimeout(() => fetchPaymentStatus(data.orderID), 1000);
+        await fetchPaymentStatus(data.orderID)
         navigate("/payment-success");
       } else {
         setPaymentError(`Payment capture failed!`);

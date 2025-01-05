@@ -13,7 +13,7 @@ const ordersController = new OrdersController(client);
 export const createOrder = async (req, res) => {
   try {
     const { cart } = req.body;
-    console.log(cart)
+    
     const item = cart[0]; // Assuming the cart always has at least one item
 
     const collect = {
@@ -106,16 +106,23 @@ export const captureOrder = async (req, res) => {
 
 // Get Payment Status API
 export const getPaymentStatus = async (req, res) => {
+
+  const { orderId } = req.params
+  
+  console.log('ORDER_ID',orderId);
   try {
-    const payment = await Payment.findOne({ orderId: req.params.orderId });
+    
+    const payment = await Payment.findOne({ orderId:orderId });
 
     // If no payment record is found, return a 404 error
     if (!payment) {
       return res.status(404).json({ error: "Payment not found" });
     }
 
+    console.log(payment);
+
     // Return the payment status record to the frontend
-    return res.json(payment);
+    return res.status(200).json({payment});
   } catch (error) {
     console.error("Failed to get payment:", error);
     res.status(500).json({ error: "Failed to get payment details" });
